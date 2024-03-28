@@ -1,3 +1,5 @@
+<!-- _nav.html -->
+
 {% load static %}
 
 <nav class="navbar">
@@ -8,31 +10,136 @@
       </div></a>
   </div>
     <ul class="nav-links">
-            <li><a href="/dashboard" data-link><i class="bi bi-house-door-fill"></i>Dashboard</a></li>
-            <li><a href="/chat" data-link><i class="bi bi-chat-fill"></i>Chat</a></li>
-            <li><a href="/game" data-link><i class="bi bi-play-circle-fill"></i>Game</a></li>
-            <li><a href="/rps-game" data-link><i class="bi bi-scissors"></i>RPS Game</a></li>
-            <li><a href="/rankings" data-link><i class="bi bi-bar-chart-fill"></i>Rankings</a></li>
-            <li><a href="/search" data-link><i class="bi bi-binoculars-fill"></i>Search</a></li>
-            {% comment %} <li><a href="/profile/{{username}}" data-link><i class="bi bi-person-fill"></i>Profile</a></li> {% endcomment %}
-            <li class="notification-menu">
-              <div class="notification-icon">
-                <i class="bi bi-bell-fill"></i>
-              </div>
-              <div class="notification-submenu">
-                <a href="/test" data-link><i class="bi bi-person-fill"></i>Arda followed you!</a>
-              </div>
-            </li>
-            <li class="profile-menu">
-              <div class="profile-image">
-                <img src="{% static "assets/profile/profilephoto.jpeg" %}" alt="Profile Image" width="48" height="48">
-              </div>
-              <div class="profile-submenu">
-                <a href="/profile/{{username}}" data-link><i class="bi bi-person-fill"></i>Profile</a>
-                <a href="/profile/{{username}}/settings" data-link><i class="bi bi-gear-fill"></i>Settings</a> 
-                <a href="/logout" data-link><i class="bi bi-box-arrow-right"></i>Logout</a>
-              </div>
-            </li>
-        </ul>
+      <li><a href="/dashboard" data-link><i class="bi bi-house-door-fill"></i>Dashboard</a></li>
+      <li><a href="/chat" data-link><i class="bi bi-chat-fill"></i>Chat</a></li>
+      <li><a href="/pong-game-find" data-link><i class="bi bi-play-circle-fill"></i>Pong Game</a></li>
+      <li><a href="/rps-game-find" data-link><i class="bi bi-scissors"></i>RPS Game</a></li>
+      <li><a href="/rankings" data-link><i class="bi bi-bar-chart-fill"></i>Rankings</a></li>
+      <li><a href="/store/{{username}}" data-link><i class="bi bi-basket2"></i>Store</a></li>
+      <li><a href="/search" data-link><i class="bi bi-search"></i>Search</a></li>
+      <li><a href="/about-us" data-link><i class="bi bi-person-raised-hand"></i>About Us</a></li> 
+      <li class="notification-menu">
+      <div class="notification-icon" style="margin-top: 5px; color: rgb(255, 140, 0);">
+          <i class="bi bi-flag-fill"></i>       
+      </div>
+      <div class="notification-submenu">
+        <form id="language-form" method="post" action="{% url 'set_language' %}">
+          {% csrf_token %}
+          <a href="#" onclick="setLanguage('tr'); return false;">
+              <img style="margin-right: 5px;" src="{% static "assets/flags/turkey.png" %}" alt="Türkçe">
+              <span style="margin-top: 3px;">Türkçe</span>
+          </a>
+          <a href="#" onclick="setLanguage('hi'); return false;">
+              <img style="margin-right: 5px;" src="{% static "assets/flags/hindi.png" %}" alt="हिंदी">
+              <span style="margin-top: 3px;">हिंदी</span>
+          </a>
+          <a href="#" onclick="setLanguage('en'); return false;">
+              <img style="margin-right: 5px;" src="{% static "assets/flags/english.png" %}" alt="English">
+              <span style="margin-top: 3px;">English</span>
+          </a>
+          <a href="#" onclick="setLanguage('pt'); return false;">
+              <img style="margin-right: 5px;" src="{% static "assets/flags/portugal.png" %}" alt="Português">
+              <span style="margin-top: 3px;">Português</span>
+          </a>
+        </form>
+      </div>
+    </li>
+      <li class="profile-menu"> 
+        <div class="profile-image">
+          <img src="{{avatar}}" alt="Profile Image" width="48" height="48" {% if is_playing %} style="border: 3px solid #ffa600" {% else %} style="border: 3px solid #4CAF4F"{% endif %}>
+        </div>
+        <div class="profile-submenu">
+          <a href="/profile/{{username}}" data-link><i class="bi bi-person-fill" ></i>Profile</a>
+          <a href="/friends/{{username}}" data-link><i class="bi bi-people-fill"></i>Friends</a>
+          <a href="/profile/{{username}}/settings" data-link><i class="bi bi-gear-fill"></i>Settings</a> 
+          <a href="/logout" data-link><i class="bi bi-box-arrow-right"></i>Logout</a>
+        </div>
+      </li>
+    </ul>
     <div class="burger-menu">&#9776;</div>
   </nav>
+  {% if not request.user.is_anonymous %}
+  <script>
+    var socket = new WebSocket('ws://' + window.location.host + '/ws/online_status/');
+  
+    socket.onopen = function(e) {
+        console.log('User is connected');
+    };
+  
+    socket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        var status = data['status'];
+        if (status === 'online') {
+            console.log('User is online');
+        }
+    };
+
+    function translateMenu(selectedLanguage) {
+      const menuItems = document.querySelectorAll('li a[data-link]');
+      menuItems.forEach(item => {
+          const href = item.getAttribute('href');
+          switch (href) {
+            case '/dashboard':
+                  item.innerHTML = '<i class="bi bi-house-door-fill"></i>' + (selectedLanguage === 'en' ? 'Dashboard' : selectedLanguage === 'tr' ? 'Panel' : selectedLanguage === 'pt' ? 'Painel' : selectedLanguage === 'hi' ? 'डैशबोर्ड' : 'Dashboard');
+                  break;
+              case '/chat':
+                  item.innerHTML = '<i class="bi bi-chat-fill"></i>' + (selectedLanguage === 'en' ? 'Chat' : selectedLanguage === 'tr' ? 'Sohbet' : selectedLanguage === 'pt' ? 'Chat' : selectedLanguage === 'hi' ? 'चैट' : 'Chat');
+                  break;
+              case '/pong-game-find':
+                  item.innerHTML = '<i class="bi bi-play-circle-fill"></i>' + (selectedLanguage === 'en' ? 'Pong Game' : selectedLanguage === 'tr' ? 'Pong Oyunu' : selectedLanguage === 'pt' ? 'Jogo de Pong' : selectedLanguage === 'hi' ? 'पोंग खेल' : 'Pong Game');
+                  break;
+              case '/rps-game-find':
+                  item.innerHTML = '<i class="bi bi-scissors"></i>' + (selectedLanguage === 'en' ? 'RPS Game' : selectedLanguage === 'tr' ? 'TKM Oyunu' : selectedLanguage === 'pt' ? 'Jogo de PPT' : selectedLanguage === 'hi' ? 'टिकमटक खेल' : 'RPS Game');
+                  break;
+              case '/rankings':
+                  item.innerHTML = '<i class="bi bi-bar-chart-fill"></i>' + (selectedLanguage === 'en' ? 'Rankings' : selectedLanguage === 'tr' ? 'Sıralamalar' : selectedLanguage === 'pt' ? 'Classificações' : selectedLanguage === 'hi' ? 'अंक' : 'Rankings');
+                  break;
+              case '/store/{{username}}':
+                  item.innerHTML = '<i class="bi bi-basket2"></i>' + (selectedLanguage === 'en' ? 'Store' : selectedLanguage === 'tr' ? 'Mağaza' : selectedLanguage === 'pt' ? 'Loja' : selectedLanguage === 'hi' ? 'स्टोर' : 'Store');
+                  break;
+              case '/search':
+                  item.innerHTML = '<i class="bi bi-search"></i>' + (selectedLanguage === 'en' ? 'Search' : selectedLanguage === 'tr' ? 'Ara' : selectedLanguage === 'pt' ? 'Pesquisar' : selectedLanguage === 'hi' ? 'खोज' : 'Search');
+                  break;
+              case '/about-us':
+                  item.innerHTML = '<i class="bi bi-person-raised-hand"></i>' + (selectedLanguage === 'en' ? 'About Us' : selectedLanguage === 'tr' ? 'Hakkımızda' : selectedLanguage === 'pt' ? 'Sobre nós' : selectedLanguage === 'hi' ? 'हमारे बारे में' : 'About Us');
+                  break;
+              case '/profile/{{username}}':
+                  item.innerHTML = '<i class="bi bi-person-fill"></i>' + (selectedLanguage === 'en' ? 'Profile' : selectedLanguage === 'tr' ? 'Profil' : selectedLanguage === 'pt' ? 'Perfil' : selectedLanguage === 'hi' ? 'प्रोफ़ाइल' : 'Profile');
+                  break;
+              case '/friends/{{username}}':
+                  item.innerHTML = '<i class="bi bi-people-fill"></i>' + (selectedLanguage === 'en' ? 'Friends' : selectedLanguage === 'tr' ? 'Arkadaşlar' : selectedLanguage === 'pt' ? 'Amigos' : selectedLanguage === 'hi' ? 'दोस्त' : 'Friends');
+                  break;
+              case '/profile/{{username}}/settings':
+                  item.innerHTML = '<i class="bi bi-gear-fill"></i>' + (selectedLanguage === 'en' ? 'Settings' : selectedLanguage === 'tr' ? 'Ayarlar' : selectedLanguage === 'pt' ? 'Configurações' : selectedLanguage === 'hi' ? 'सेटिंग्स' : 'Settings');
+                  break;
+              case '/logout':
+                  item.innerHTML = '<i class="bi bi-box-arrow-right"></i>' + (selectedLanguage === 'en' ? 'Logout' : selectedLanguage === 'tr' ? 'Çıkış' : selectedLanguage === 'pt' ? 'Sair' : selectedLanguage === 'hi' ? 'लॉग आउट' : 'Logout');
+                  break;
+              default:
+                  item.innerHTML = 'Translation not available';
+          }
+      });
+  }
+    
+    function getCookie(name) {
+        const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return cookieValue ? cookieValue.pop() : '';
+    }
+
+    const selectedLanguage = getCookie('selectedLanguage');
+
+    translateMenu(selectedLanguage);
+    </script>
+  {% endif %}
+<script >
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelector(".burger-menu").addEventListener("click", function () {
+          var navLinks = document.querySelector(".nav-links");
+          if (navLinks.classList.contains("show")) {
+              navLinks.classList.remove("show");
+          } else {
+              navLinks.classList.add("show");
+          }
+      });
+  });
+  </script>

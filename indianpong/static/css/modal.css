@@ -1,0 +1,43 @@
+@font-face {
+    font-family: 'PixelifySans';
+    src: url('fonts/PixelifySans-VariableFont_wght.ttf');
+}
+
+.modal {
+    font-family: 'PixelifySans';
+}
+
+.modal.show .modal-dialog {
+    max-width: 30%;
+}
+
+.modal-header {
+    padding-bottom: 0;
+}
+
+.modal-body {
+    padding-top: 0;
+}
+
+.modal-body h3 {
+    border-bottom: 1px solid;
+    font-size: 1.5rem;
+}
+
+.modal-controls {
+    padding: 1rem 0px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-controls .col:first-child {
+    font-weight: bold;
+}
+
+.modal-keys{
+
+    padding: 0.1em 0.5em;
+    background-color: rgb(75, 73, 73);
+    border: 3px solid rgb(49, 49, 49);
+    color: rgb(224, 224, 224);
+}

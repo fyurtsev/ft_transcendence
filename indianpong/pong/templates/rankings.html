@@ -1,59 +1,155 @@
 {% extends "base.html" %}
-
 {% load static %}
 
-{% block title %}Rankings{% endblock title %}
+{% block stylesheet %}
+<link rel="stylesheet" href="{% static 'css/ranking.css' %}">
+{% endblock stylesheet %}
+
+{% block title %}
+{{context.rankingsPageTittle}}
+{% endblock title %}
 
 {% block app %}
-  {% include "_nav.html" %}
+<div class="container-top">
+    <div class="rankings-card">
+        <div>
+            <!-- Podium -->
+            <div class="leaderboard-podium">
+                {% for user in top_users %}
+                <a href="profile/{{ user.username }}" class="leaderboard-winner leaderboard-winner--rank{{ user.rank }}">
+                {% comment %} <a href="profile/{{ user.username }}" {% if user.username == request.user.username %} class="leaderboard-winner leaderboard-winner--rank{{ user.rank }}you" {% else %} class="leaderboard-winner leaderboard-winner--rank{{ user.rank }}" {% endif %}> {% endcomment %}
+                    <header class="leaderboard-winner-header" >
+                        <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="winner-img">
+                        <h3>{{ user.displayname }}</h3>
+                        <span class="badge">{{ user.username }}</span>
+                    </header>
+                    <footer class="leaderboard-winner-footer">
+                        <ul>
+                            <li>
+                                <small>{{context.rankingsTableRankText}}</small>
+                                {% if user.rank %}
+                                <strong>#{{ user.rank }}</strong>
+                                {% endif %}
+                            </li>
+                            <li>
+                                <small>{{context.rankingsTablePongPointsText}}</small>
+                                <strong>{{ user.elo_point }}</strong>
+                            </li>
+                        </ul>
+                    </footer>
+                </a>
+                {% endfor %}
+            </div>
 
-    <div class="container-top">
-        <div class="rankings-card">
-            <div class="main-center">
-            <main>
-              <div id="header">
-                <h1>Ranking</h1>
-                <button class="share">
-                  <i class="bi bi-share-fill"></i>
-                </button>
-              </div>
-              <div id="leaderboard">
-                <div class="ribbon"></div>
-                <table>
-                  <tr>
-                    <td class="number">1</td>
-                    <td class="name">Lee Taeyong</td>
-                    <td class="points">
-                      258.244 <img class="gold-medal" src="{% static "assets/achievements/award.png" %}" alt="gold medal"/>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="number">2</td>
-                    <td class="name">Mark Lee</td>
-                    <td class="points">258.242</td>
-                  </tr>
-                  <tr>
-                    <td class="number">3</td>
-                    <td class="name">Xiao Dejun</td>
-                    <td class="points">258.223</td>
-                  </tr>
-                  <tr>
-                    <td class="number">4</td>
-                    <td class="name">Qian Kun</td>
-                    <td class="points">258.212</td>
-                  </tr>
-                  <tr>
-                    <td class="number">5</td>
-                    <td class="name">Johnny Suh</td>
-                    <td class="points">258.208</td>
-                  </tr>
-                </table>
-                
-              </div>
-            </main>
-        </div>
-
-
+            <!-- Ranking -->
+            <div class="leaderboard-ranking">
+                <div class="data">
+                    <div class="data-container">
+                        <div class="data-head">
+                            <div class="data-row">
+                                <div class="data-cell data-cell--sm" style="display: flex">
+                                    <div class="data-filter" style="visibility: hidden">Images</div>
+                                    <div class="data-filter"></div>
+                                </div>
+                                <div class="data-cell data-cell--sm">
+                                    <div class="data-filter">{{context.rankingsTableRankText}}</div>
+                                </div>
+                                <div class="data-cell">
+                                    <div class="data-filter">{{context.rankingsTableNameText}}</div>
+                                </div>
+                                <div class="data-cell">
+                                    <div class="data-filter">{{context.rankingsTableUsernameText}}</div>
+                                </div>
+                                <div class="data-cell data-cell--sm">
+                                    <div class="data-filter">{{context.rankingsTableWinsText}}</div>
+                                </div>
+                                <div class="data-cell data-cell--sm">
+                                    <div class="data-filter">{{context.rankingsTableLossesText}}</div>
+                                </div>
+                                <div class="data-cell data-cell--sm">
+                                    <div class="data-filter">{{context.rankingsTableWinRateText}}</div>
+                                </div>
+                                <div class="data-cell data-cell--sm">
+                                    <div class="data-filter">{{context.rankingsTablePongPointsText}}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="data-body">
+                            {% for user in users_page_obj %}
+                            <a href="profile/{{ user.username }}" {% if user.username == request.user.username %} style="border: 3px solid #F99601" {% endif %} class="data-item">
+                                <div class="data-row">
+                                    <div class="data-cell data-cell--sm">
+                                        <div class="data-content">
+                                            <div>
+                                                <img src="{{ user.avatar.url }}" alt="{{ user.username }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="data-cell data-cell--sm">
+                                        <div class="data-content">
+                                            <strong>
+                                                    {{ user.rank }}
+                                            </strong>
+                                        </div>
+                                    </div>
+                                    <div class="data-cell">
+                                        <div class="data-content">
+                                            {{ user.displayname }}  
+                                        </div>
+                                    </div>
+                                    <div class="data-cell">
+                                        <div class="data-content">
+                                            {{ user.username }}  
+                                        </div>
+                                    </div>
+                                    <div class="data-cell data-cell--sm">
+                                        <div class="data-content">
+                                            {{ user.game_stats.total_win_pong }}  
+                                        </div>
+                                    </div>
+                                    <div class="data-cell data-cell--sm">
+                                        <div class="data-content">
+                                            {{ user.game_stats.total_lose_pong }}  
+                                        </div>
+                                    </div>
+                                    <div class="data-cell data-cell--sm">
+                                        <div class="data-content">
+                                            {{ user.game_stats.formatted_win_rate }}  
+                                        </div>
+                                    </div>
+                                    <div class="data-cell data-cell--sm">
+                                        <div class="data-content">
+                                            {{ user.elo_point }}  
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Pagination -->
+            <nav aria-label="Page navigation example " class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not users_page_obj.has_previous %}disabled{% endif %}">
+                        <a class="page-link" href="{% if users_page_obj.has_previous %}?page={{ users_page_obj.previous_page_number }}{% endif %}"    aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% for page_num in users_page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_num == users_page_obj.number %}active{% endif %}">
+                        <a class="page-link page-link-rankings" href="?page={{ page_num }}">{{ page_num }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {% if not users_page_obj.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{% if users_page_obj.has_next %}?page={{ users_page_obj.next_page_number }}{% endif %}"    aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
-{% endblock app %}
+</div>
+{% endblock %}

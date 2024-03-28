@@ -12,13 +12,14 @@ PADDLE_Y = (HEIGHT - PAD_HEIGHT) / 2
 BALL_RADIUS = 10
 BALL_SPEED = 1
 
-MAX_SCORE = 20
+MAX_SCORE = 10
 
 class Status(Enum):
     ACCEPTED = 0
     WAITING = 1
     STARTED = 2
-    ENDED = 3
+    PAUSED = 3
+    ENDED = 4
 
 
 class Ball:
@@ -47,9 +48,10 @@ class Player:
 
 # Game class have one Ball and two Players objects
 class PongGame:
-    def __init__(self, player1, player2):
+    def __init__(self, player1, player2, tournament_id=None):
         self.status = Status.ACCEPTED
         self.group_name = player1 + "-" + player2
+        self.tournament_id = tournament_id
         self.ball = Ball()
         self.player1 = Player(player1)
         self.player2 = Player(player2)
@@ -100,6 +102,16 @@ class PongGame:
         self.ball.dy = random.choice([-1, 1])
         if self.player1.score >= MAX_SCORE or self.player2.score >= MAX_SCORE:
             self.status = Status.ENDED
+            #? Record the game in the database?
+
+    def pauseGame(self):
+        self.status = Status.PAUSED
+
+    def otherPlayer(self, username):
+        if username == self.player1.username:
+            return self.player2.username
+        else:
+            return self.player1.username
 
     def getScore(self, username):
         if username == self.player1.username:

@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{tournament.name}} {{context.tournamentroomPageTittle}}{% endblock %}
+{% block stylesheet %}<link rel="stylesheet" href="{% static "css/tournament-room.css" %}">{% endblock stylesheet %}
+
+{% block app %}
+<div class="container-top">
+    <div class="card">
+        <div class="indian-logo">
+            <img class="logo-indian" src="{% static "assets/logo-dark.png" %}">
+        </div>
+        <div class="pong-game-text">
+            <h3 class="pong-game-text" style="text-align: center; color:white">{{context.tournamentroomRoomText}} #{{tournament.id}} - Ping Pong {{context.tournamentroomPageTittle}} {{tournament.name}}</h3>
+        </div>
+        <div class="game-room-buttons">
+            {% if tournament.status == "open" %}
+                {% if is_participants %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="leave_tournament" value="true">
+                        <button class="leave-button" type="submit"><i class="bi bi-x-circle-fill"></i>{{context.tournamentroomLeaveButtonText}}</button>
+                    </form>
+                {% endif %}
+                {% if not is_participants %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="join_tournament" value="true">
+                        <button class="leave-button" type="submit"><i class="bi bi-plus-circle-fill"></i>{{context.tournamentroomJoinButtonText}}</button>
+                    </form>
+                {% endif %}
+                {% if tournament.creator == user %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="start_tournament" value="true">
+                        <button class="leave-button" type="submit"><i class="bi bi-flag-fill"></i>{{context.tournamentroomStartButtonText}}</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            <button class="leave-button" id="checkbracket" href="#check-bracket" onclick="displaySectionGame('game-bracket-section')"
+                type="button"><i class="bi bi-calendar-check-fill"></i> {{context.tournamentCheckBracketButtonText}}</button>
+            <button class="leave-button" id="gameroombracket" href="#check-room" onclick="displaySectionGame('game-room-section')"
+                type="button"><i class="bi bi-4-square-fill"></i> {{context.tournamentroomTournamentRoomButton}}</button>
+        </div>
+        <!-- Show winner avatar name and redirect to profile-->
+        {% if tournament.winner %}
+            <div class="winner-container">
+                <div class="winner-avatar">
+                    <img src="{{ tournament.winner.avatar.url }}" alt="Avatar" class="game-room-avatar">
+                </div>
+                <div class="winner-info">
+                    <p class="truncate-pseudo" title="{{ tournament.winner.username }}">{{ tournament.winner.username }}</p>
+                </div>
+            </div>
+        {% endif %}
+        <section id="game-room-section">
+            <div class="player-wrapper">
+                {% for participant in tournament.participants.all %}   
+                        {% if participant.username == tournament.creator.username %}
+                            <div class="place">
+                                <div class="place-container">
+                                    <div class="avatar-container-creator">
+                                        <img src="{{ participant.avatar.url }}" alt="Avatar" class="game-room-avatar">
+                                    </div>
+                                    <div class="clash-info player-info">
+                                        <p class="truncate-pseudo-creator" title="{{ participant.username }}">{{ participant.username }} (L)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="place">
+                                <div class="place-container">
+                                    <div class="avatar-container">
+                                        <img src="{{ participant.avatar.url }}" alt="Avatar" class="game-room-avatar">
+                                    </div>
+                                    <div class="clash-info player-info">
+                                        <p class="truncate-pseudo" title="{{ participant.username }}">{{ participant.username }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                {% endfor %}
+                {% for i in empty_slots %}
+                        <div class="place">
+                            <div class="place-container">
+                                <div class="avatar-container-free">
+                                    <img src="https://static.codingame.com/assets/img_waiting_for_player.8346764a.png"
+                                        alt="Avatar" class="game-room-avatar-none">
+                                </div>
+                                <div class="clash-info free-info">
+                                    <div class="waitLabel" style="color: white; font-size: bold;">
+                                        <p>{{context.tournamentroomWaitingText}} <br> {{context.tournamentroomForPlayerText}} </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                {% endfor %}
+            </div>
+        </section>
+        <section id="game-bracket-section">
+            <div class="game-bracket-area">
+                <div class="bracket-area">
+                    <div class="bracket disable-image">
+                        <div class="column one">
+                            <div class="match winner-bottom">
+                                <div class="match-top team">
+                                    <span class="image">{{ tournament.first_round_matches.first.player1.avatar.url}}</span>
+                                    <span class="seed">1</span>
+                                    <span class="name">{{ tournament.first_round_matches.first.player1.username }}</span>
+                                    <span class="score">{{ tournament.first_round_matches.first.player1_score}}</span>
+                                </div>
+                                <div class="match-bottom team">
+                                    <span class="image">{{ tournament.first_round_matches.first.player2.avatar.url}}</span>
+                                    <span class="seed">2</span>
+                                    <span class="name">{{ tournament.first_round_matches.first.player2.username }}</span>
+                                    <span class="score">{{ tournament.first_round_matches.first.player2_score}}</span>
+                                </div>
+                                <div class="match-lines">
+                                    <div class="line one"></div>
+                                    <div class="line two"></div>
+                                </div>
+                                <div class="match-lines alt">
+                                    <div class="line one"></div>
+                                </div>
+                            </div>
+                            <div class="match winner-bottom">
+                                <div class="match-top team">
+                                    <span class="image">{{ tournament.first_round_matches.last.player1.avatar.url}}</span>
+                                    <span class="seed">3</span>
+                                    <span class="name">{{ tournament.first_round_matches.last.player1.username }}</span>
+                                    <span class="score">{{ tournament.first_round_matches.last.player1_score}}</span>
+                                </div>
+                                <div class="match-bottom team">
+                                    <span class="image">{{ tournament.first_round_matches.last.player2.avatar.url}}</span>
+                                    <span class="seed">4</span>
+                                    <span class="name">{{ tournament.first_round_matches.last.player2.username }}</span>
+                                    <span class="score">{{ tournament.first_round_matches.last.player2_score}}</span>
+                                </div>
+                                <div class="match-lines">
+                                    <div class="line one"></div>
+                                    <div class="line two"></div>
+                                </div>
+                                <div class="match-lines alt">
+                                    <div class="line one"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column three">
+                            <div class="match winner-top">
+                                <div class="match-top team">
+                                    <span class="image">{{ tournament.final_round_matches.first.player1.avatar.url}}</span>
+                                    <span class="seed">5</span>
+                                    <span class="name">{{ tournament.final_round_matches.first.player1.username }}</span>
+                                    <span class="score">{{ tournament.final_round_matches.first.player1_score }}</span>
+                                </div>
+                                <div class="match-bottom team">
+                                    <span class="image">{{ tournament.final_round_matches.first.player2.avatar.url}}</span>
+                                    <span class="seed">6</span>
+                                    <span class="name">{{ tournament.final_round_matches.first.player2.username }}</span>
+                                    <span class="score">{{ tournament.final_round_matches.first.player2_score }}</span>
+                                </div>
+                                <div class="match-lines">
+                                    <div class="line one"></div>
+                                    <div class="line two"></div>
+                                </div>
+                                <div class="match-lines alt">
+                                    <div class="line one"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    function displaySectionGame(sectionId) {
+    var sections = ["game-bracket-section", "game-room-section"];
+    var buttons = ["checkbracket", "gameroombracket"];
+
+    var button = document.getElementById(buttons[1]);
+    var button2 = document.getElementById(buttons[0]);
+    for (var i = 0; i < sections.length; i++) {
+        var section = document.getElementById(sections[i]);
+        if (sections[i] === sectionId) {
+            section.style.display = 'block';
+            if (sectionId === "game-bracket-section") {
+                button.style.display = 'inline';
+                button2.style.display = 'none';
+            }
+            else {
+                button.style.display = 'none';
+                button2.style.display = 'inline';
+            }
+        } else {
+            section.style.display = 'none';
+        }
+    }
+}
+
+</script>
+{% endblock %}
