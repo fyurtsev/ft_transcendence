@@ -1,10 +1,12 @@
-
+export function LocalGame() {
 const canvas = document.getElementById('pongCanvas');
 var gameStartInfos = document.getElementById("gameStartInfos");
 var startButton = document.getElementById("startButton");
 var ctx = canvas.getContext("2d");
 canvas.width = 800;
 canvas.height = 600;
+
+
 
 
 const translationswin = {
@@ -42,7 +44,7 @@ var player2nameX = canvas.width - textWidth2 - 10;
 var player2nameY = 20;
 
 // if giantMan abilities equiped
-var abilities_paddleHeight = (gameMode == "Abilities") ? 120 : 100;
+var abilities_paddleHeight = (gameMode == "Abilities") ? 115 : 100;
 var paddleWidth = 10;
 var paddleHeight = 100;
 var paddleSpeed = 15;
@@ -100,7 +102,7 @@ function update() {
         if (ball.x - ball.radius <= paddle1.x + paddle1.width) {
             if (gameMode == "Abilities") {
                 if (Math.random() <= 0.5) {
-                    ball.speed += 1;
+                    ball.speed += 0.25;
                 }
             }
             ball.x = paddle1.x + paddle1.width + ball.radius;
@@ -115,7 +117,7 @@ function update() {
         if (ball.x + ball.radius >= paddle2.x) {
             if (gameMode == "Abilities") {
                 if (Math.random() <= 0.5) {
-                    ball.speed += 1;
+                    ball.speed += 0.25;
                 }
             }
             ball.x = paddle2.x - ball.radius;
@@ -244,7 +246,7 @@ var main = function () {
         render();
     }
 
-    requestAnimationFrame(main);
+    localGameAnimationId = requestAnimationFrame(main);
 };
 
 // Cross-browser support for requestAnimationFrame
@@ -397,7 +399,7 @@ function restartGame() {
 
 // Çıkış yapma işlemleri
 function exitGame() {
-    window.location.href = '/dashboard';
+    swapApp('/pong-game-find')
 }
 
 document.getElementById('restartButton').addEventListener('click', restartGame);
@@ -410,3 +412,5 @@ startButton.addEventListener("click", function() {
     gameMode = document.getElementById("gameMode").value;
     showCanvas();
 });
+
+}

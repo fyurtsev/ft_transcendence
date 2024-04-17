@@ -1,247 +1,328 @@
-const roomName = JSON.parse(document.getElementById("room-name").textContent)
-const user = JSON.parse(document.getElementById("user").textContent)
-const conversation = document.getElementById("conversation")
-const sendButton = document.getElementById("send")
-const inputField = document.getElementById("comment")
-const inviteButton = document.getElementById("inviteButton")
-const acceptButton = document.getElementById("acceptButton")
-const declineButton = document.getElementById("declineButton")
-//acceptButton.style.display = 'none';
-//declineButton.style.display = 'none';
+export function innerChat() {
 
+function showToast(content, status, iconClass) {
+  const liveToast = document.getElementById('liveToast');
+  var toastContent = document.querySelector('#liveToast .fw-semibold');
+  var toastIcon = document.querySelector('.toast-body .i-class i');
 
-// const socket = new WebSocket("ws://" + window.location.host + "/ws/chat/" + roomName + "/")
-import { socket } from "./gamesocket.js";
+  toastIcon.className = iconClass;
+  liveToast.classList.remove('text-bg-danger'); 
+  liveToast.className = 'toast'; 
+  liveToast.classList.add(status);
 
-socket.onmessage = function (e) {
-    const data = JSON.parse(e.data)
+  toastContent.textContent = content;
+  const toast = new bootstrap.Toast(liveToast);
+  toast.show();
+  setTimeout(function() {
+      toast.hide();
+  }, 8000);
+}
 
-    switch (data.type) {
-      case 'user.online':
-        socket.send(JSON.stringify({
-          "action": "room",
-          "room_name": roomName,
-        }))
+const langMessages = {
+  hi: {
+      blocked: "ब्लॉक किया गया है",
+      unblocked: "अनब्लॉक किया गया है",
+      followed: "को फॉलो किया गया है",
+      unfollowed: "का अनुसरण किया गया है",
+      blockedfollow: "ब्लॉक किया गया है आप उसे फॉलो नहीं कर सकते",
+      inviteyou: "आपने एक निमंत्रण भेजा है",
+      invitehe: "आपने एक निमंत्रण प्राप्त किया है",
+      acceptyou: "आपका निमंत्रण स्वीकृत हुआ",
+      accepthe: "आपने निमंत्रण स्वीकार किया",
+      declineyou: "आपका निमंत्रण अस्वीकृत हुआ",
+      declinehe: "आपने निमंत्रण अस्वीकार किया",
+  },
+  pt: {
+      blocked: "foi bloqueado",
+      unblocked: "foi desbloqueado",
+      followed: "foi seguido",
+      unfollowed: "deixou de seguir",
+      blockedfollow: "foi bloqueado você não pode segui-lo",
+      inviteyou: "Você enviou um convite",
+      invitehe: "Você recebeu um convite",
+      acceptyou: "Seu convite foi aceito",
+      accepthe: "Você aceitou o convite",
+      declineyou: "Seu convite foi recusado",
+      declinehe: "Você recusou o convite",
+  },
+  en: {
+      blocked: "has been blocked",
+      unblocked: "has been unblocked",
+      followed: "has been followed",
+      unfollowed: "has been unfollowed",
+      blockedfollow: "has been blocked you can't follow him/her",
+      inviteyou: "You sent an invitation",
+      invitehe: "You received an invitation",
+      acceptyou: "Your invitation accepted",
+      accepthe: "You accepted invitation",
+      declineyou: "Your invitation declined",
+      declinehe: "You declined invitation",
+     
+  },
+  tr: {
+      blocked: "engellendi",
+      unblocked: "engeli kaldırıldı",
+      followed: "takip edildi",
+      unfollowed: "takipten çıkarıldı",
+      blockedfollow: "engellendi takip edemezsiniz",
+      inviteyou: "Davet gönderdiniz",
+      invitehe: "Davet aldınız",
+      acceptyou: "Davetiniz kabul edildi",
+      accepthe: "Davet kabul edildi",
+      declineyou: "Davetiniz reddedildi",
+      declinehe: "Davet reddedildi",
+  }
+};
 
-        // Show online users
-        console.log('Online users:', data.users);
+  const roomName = JSON.parse(document.getElementById("room-name").textContent);
+  const user = JSON.parse(document.getElementById("user").textContent);
+  const sendButton = document.getElementById("send");
+  const conversation = document.getElementById("conversation");
+  const inputField = document.getElementById("comment");
+  const userNameOnChat = document.getElementById("userNameOnChat").textContent.trim();
+  const blockButton = document.getElementById("block");
+  const inviteButton = document.getElementById("invite");
+  const acceptButton = document.getElementById("accept");
+  const declineButton = document.getElementById("decline");
+  const unblockButton = document.getElementById("unblock");
+  const followButton = document.getElementById("follow");
+  const unfollowButton = document.getElementById("unfollow");
+  const messages = document.getElementById("messages");
 
-        console.log('Player connected:', data.username);
-        //console.log(my.username);
-        break;
+  const chatsocket = new WebSocket("wss://" + window.location.host + "/ws/chat/" + roomName + "/")
 
-      case 'user.offline':
+  chatsocket.onopen = function (e) {
+      console.log("socket opened")
+  }
 
-        console.log('Player disconnected:', data.username);
-        break;
+  chatsocket.onclose = function (e) {
+      console.error("socket closed unexpectedly")
+  }
 
-      case 'chat.message':
-        if (data.message === `Let's play!`) {
-          console.log('Player invited:', data.user);
-          console.log(user + " " + opponent);
-          if (user !== data.user) {
-            // acceptButton.style.display = 'block';
-             //declineButton.style.display = 'block';
-          }
+  chatsocket.onerror = function (e) {
+      console.error("socket error")
+  }
+
+  function messageMe(data){
+    var message = `                  
+    <li class="conversation-item me">
+      <div class="conversation-item-content">
+        <div class="conversation-item-wrapper">
+          <div class="conversation-item-box">
+          </div>
+        </div>
+        <div class="conversation-item-wrapper">
+          <div class="conversation-item-box">
+            <div class="conversation-item-text">
+            ${data.message}
+              <div class="conversation-item-time">${data.created_date}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>`
+    return message
+}
+
+function messageOthers(data) {
+  var message = `
+  <li class="conversation-item">
+    <div class="conversation-item-content">
+      <div class="conversation-item-wrapper">
+        <div class="conversation-item-box">
+          <div class="conversation-item-text">
+              <p>${data.message}</p>
+            <div class="conversation-item-time">${data.created_date}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </li>`
+  return message
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target.tagName === 'A' && e.target.hasAttribute('data-url')) {
+    var url = e.target.getAttribute('data-url');
+    if (url.includes('/remote-game/tournament/')) {
+      e.preventDefault();
+      swapApp(url);
+    }
+  }
+});
+
+  chatsocket.onmessage = function (e) {
+      const cookie = document.cookie.split('; ').find(row => row.startsWith('selectedLanguage='));
+      const lang = cookie ? cookie.split('=')[1] : 'en';
+      const data = JSON.parse(e.data)
+      
+      
+      switch (data.type) {
+        case 'chat.message':
           if (user === data.user) {
-            invite();
+              var message = messageMe(data);
+          } else {
+              var message = messageOthers(data);
           }
-        }
-        else if (data.message === 'Kabul ediyorum mk') {
-          console.log('Player accepted:', data.user);
-          console.log(user + " " + opponent);
-          if (user !== data.user) {
-            acceptGame(opponent + "_" + user, opponent, user);
-          }
-          // window.location.href = '/game'; // refreshes the page
-          //history.pushState({}, '', '/game'); // changes the url without refreshing the page
-          // fetch /game and replace inner html within <div class="app" id="app">
-          fetch('/game')
-          .then(response => response.text())
-          .then(html => {
-            const appDiv = document.getElementById('app');
-            appDiv.innerHTML = html;
-          })
-          .catch(error => console.error('Error:', error));
-        }
-        if (data.message === `Let's play!`) {
-          console.log('Player invited:', data.user);
-          console.log(user + " " + opponent);
-          if (user !== data.user) {
+            conversation.innerHTML += message
+            setTimeout(() => {
+              conversation.scrollTop = conversation.scrollHeight;
+            }, 0);
+          break;
+        case 'invite.game':
+          if (user === data.inviter) {
+            showToast(`${langMessages[lang]['inviteyou']}`, 'text-bg-info', 'bi bi-bug-fill');
+          } else {
+            showToast(`${langMessages[lang]['invitehe']}`, 'text-bg-info', 'bi bi-bug-fill');
             acceptButton.style.display = 'block';
             declineButton.style.display = 'block';
           }
-          if (user === data.user) {
-            invite();
+          break;
+        case 'accept.game':
+          if (user === data.accepted) {
+            showToast(`${langMessages[lang]['acceptyou']}`, 'text-bg-success', 'bi bi-bug-fill');
+          } else {
+            showToast(`${langMessages[lang]['accepthe']}`, 'text-bg-success', 'bi bi-bug-fill');
+            acceptButton.style.display = 'none';
+            declineButton.style.display = 'none';
           }
-        }
-        else if (data.message === 'Kabul ediyorum mk') {
-          console.log('Player accepted:', data.user);
-          console.log(user + " " + opponent);
-          if (user !== data.user) {
-            acceptGame(opponent + "_" + user, opponent, user);
+          swapApp(`/remote-game/invite/${data.game_id}`);
+          break;
+
+        case 'decline.game':
+          if (user === data.declined) {
+            showToast(`${langMessages[lang]['declineyou']}`, 'text-bg-success', 'bi bi-bug-fill');
+          } else {
+            showToast(`${langMessages[lang]['declinehe']}`, 'text-bg-success', 'bi bi-bug-fill');
           }
-          // Fetch /game and replace inner HTML within <div class="app" id="app">
+          break;
 
-        }
-        else if (data.message === 'İstemiyorum mk') {
-          console.log('Player declined:', data.user);
-          if (user !== data.user) {
-            declineGame(opponent + "_" + user, opponent, user);
+        case 'blocked':
+          if (data.blocker === user) {
+            unblockButton.style.display = 'block';
+            blockButton.style.display = 'none';
+            sendButton.disabled = true;
+            sendButton.style.color = 'red';
+            conversation.style.display = 'none';
+            showToast(`${data.blocked} ${langMessages[lang][data.type]}`, 'text-bg-danger', 'bi bi-bug-fill');
           }
-        }
-        if (user === data.user) {
-          var message = `                  
-            <li class="conversation-item me">
-              <div class="conversation-item-content">
-                <div class="conversation-item-wrapper">
-                  <div class="conversation-item-box">
-                  </div>
-                </div>
-                <div class="conversation-item-wrapper">
-                  <div class="conversation-item-box">
-                    <div class="conversation-item-text">
-                    ${data.message}
-                      <div class="conversation-item-time">${data.created_date}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </li>`
-        } else {
-          var message = `
-            <li class="conversation-item">
-              <div class="conversation-item-content">
-                <div class="conversation-item-wrapper">
-                  <div class="conversation-item-box">
-                    <div class="conversation-item-text">
-                      <p>${data.message}</p>
-                      <div class="conversation-item-time">${data.created_date}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </li>`
-        }
-       
-        conversation.innerHTML += message
-        setTimeout(() => {
-          conversation.scrollTop = conversation.scrollHeight;
-        }, 0);
-    };
-}
-
-socket.sendJSON = function (data) {
-  socket.send(JSON.stringify(data));
-}
-
-// Splite roomName to get username
-var roomNameArray = roomName.split('_');
-// Take the one which is not user
-var opponent = roomNameArray[0] === user ? roomNameArray[1] : roomNameArray[0];
-
-function invite() {
-  // Get necessary data and call socket.sendJSON
-  //username = inviteInput.value;
-  // maybe put in action.js
-  socket.sendJSON({
-      action: 'invite',
-      invited: opponent,
-  });
-}
+          break;
+        case 'unblocked':
+          if (data.unblocker === user) {
+            unblockButton.style.display = 'none';
+            blockButton.style.display = 'block';
+            sendButton.style.color = '#94a3b8';
+            sendButton.disabled = false;
+            conversation.style.display = 'block';
+            showToast(`${data.unblocked} ${langMessages[lang][data.type]}`, 'text-bg-success', 'bi bi-bug-fill');
+          }
+          break;
+      };
+  }
 
 
-
-socket.onclose = function (e) {
-    console.error("soket beklenmedik şekilde kapandı!")
-}
-
-inputField.focus()
-inputField.onkeyup = function (e) {
-    if (e.keyCode === 13) {
-        sendButton.click()
-    }
-}
-
-function showOptions() {
-    var optionsDiv = document.getElementById('options');
-    if (optionsDiv.style.display === 'none' || optionsDiv.style.display === '') {
-        optionsDiv.style.display = 'block';
-    } else {
-        optionsDiv.style.display = 'none';
-    }
-}
-
-sendButton.onclick = function (e) {
-    const message = inputField.value
-    socket.send(JSON.stringify({
-        "action": "message",
-        "user": user, 
-        "message": message,
-    }))
-    inputField.value = ''
-}
+  inputField.focus()
+  inputField.onkeyup = function (e) {
+      if (e.keyCode === 13) {
+          sendButton.click()
+      }
+  }
 
 
-inviteButton.onclick = function (e) {
-  const message = `Let's play!`
-
-  socket.send(JSON.stringify({
-    "action": "message",
-    "user": user, 
-    "message": message,
+  sendButton.onclick = function (e) {
+      const message = inputField.value
+      console.log(userNameOnChat)
+      chatsocket.send(JSON.stringify({
+          "action": "chat",
+          "user": user, 
+          "message": message,
       }))
       inputField.value = ''
-      // Delay 2 seconds
-      //setTimeout(redirect, 2000);
-      // Redirect to /game
-
   }
-  
+
+  blockButton.onclick = function (e) {
+    console.log(userNameOnChat + ' clicked');
+    chatsocket.send(JSON.stringify({
+        "action": "block",
+        "blocked": userNameOnChat,
+    }))
+  }
+
+  unblockButton.onclick = function (e) {
+    chatsocket.send(JSON.stringify({
+        "action": "unblock",
+        "unblocked": userNameOnChat,
+    }))
+  }
+
+  inviteButton.onclick = function (e) {
+    //console.log("invite button clicked");
+    chatsocket.send(JSON.stringify({
+      "action": "invite.game",
+  }))
+  }
+
   acceptButton.onclick = function (e) {
-    accept()
+    chatsocket.send(JSON.stringify({
+      "action": "accept.game",
+      "accepted": userNameOnChat,
+      "accepter": user,
+    }))
   }
+
   declineButton.onclick = function (e) {
-    decline()
+    chatsocket.send(JSON.stringify({
+      "action": "decline.game",
+    }))
   }
 
-  function accept() {
-    const message = `Kabul ediyorum mk`
-    socket.send(JSON.stringify({
-      "action": "message",
-      "user": user, 
-      "message": message,
-  }))
-  inputField.value = ''
-  }
-  
-  function decline() {
-    const message = `İstemiyorum mk`
-    socket.send(JSON.stringify({
-      "action": "message",
-      "user": user, 
-      "message": message,
-  }))
-  inputField.value = ''
-  declineGame(roomName, opponent, user);
-  }
-
-  function acceptGame(group_name, inviter, invited) {
-    // Get necessary data and call socket.sendJSON
-    socket.sendJSON({
-        action: 'accept',
-        group_name: group_name,
-        accepted: inviter,
-        accepter: invited,
+  followButton.onclick = function (e) {
+    const cookie = document.cookie.split('; ').find(row => row.startsWith('selectedLanguage='));
+    const lang = cookie ? cookie.split('=')[1] : 'en';
+    if (unblockButton.style.display === 'block') {
+      showToast(`${userNameOnChat} ${langMessages[lang].blockedfollow}`, 'text-bg-danger', 'bi bi-bug-fill');
+      return;
+    }
+    var csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken')).split('=')[1];
+    fetch(`/follow_unfollow/${userNameOnChat}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ action: "follow" })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data['status'] === 'ok') {
+            showToast(`${userNameOnChat} ${langMessages[lang].followed}`, 'text-bg-success', 'bi bi-bug-fill');
+            followButton.style.display = 'none';
+            unfollowButton.style.display = 'block';
+      }
     });
-}
+  }
 
-function declineGame(group_name, inviter, invited) {
-    // Get necessary data and call socket.sendJSON
-    socket.sendJSON({
-        action: 'decline',
-        group_name: group_name,
-        declined: inviter,
-        decliner : invited,
+  unfollowButton.addEventListener('click', function(e) {
+    const cookie = document.cookie.split('; ').find(row => row.startsWith('selectedLanguage='));
+    const lang = cookie ? cookie.split('=')[1] : 'en';
+
+    var csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken')).split('=')[1];
+    fetch(`/follow_unfollow/${userNameOnChat}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ action: "unfollow" })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data['status'] === 'ok') {
+            showToast(`${userNameOnChat} ${langMessages[lang].unfollowed}`, 'text-bg-danger', 'bi bi-bug-fill');
+            unfollowButton.style.display = 'none';
+            followButton.style.display = 'block';
+        }
+      });
     });
+
 }

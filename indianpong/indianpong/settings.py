@@ -27,6 +27,8 @@ SECRET_KEY = environ.get("SECRET_KEY", default="w^bxst+y6yv=d*5+7h)2s3)5vfz!b2ja
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = environ.get("DEBUG", default=True)
 
+BASE_URL = environ.get("BASE_URL", default="http://localhost:8000")
+
 ALLOWED_HOSTS = ['indianpong.com','indianpong.onrender.com', 'http://127.0.0.1:8000', 'localhost', '127.0.0.1']#environ.get("ALLOWED_HOSTS", default="").split(" ")
 
 CSRF_TRUSTED_ORIGINS = [
@@ -88,7 +90,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'pong.context_processors.userinfo',
             ],
         },
     },
@@ -127,16 +128,6 @@ CACHES = {
     }
 }
 
-""" DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': environ.get("DB_NAME", default="transcendence"),
-        'USER': environ.get("DB_USER"),
-        'PASSWORD': environ.get("DB_PASSWORD"),
-        'HOST': environ.get("DB_HOST", default="localhost"),
-        'PORT': environ.get("DB_PORT", default="5432")
-    }
-} """
 
 AUTH_USER_MODEL = "pong.UserProfile"
 LOGIN_URL = "login"
@@ -190,18 +181,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+""" EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
-EMAIL_HOST_USER = 'indianpong@gmail.com'
+EMAIL_HOST_USER = 'indianpong@gmail.com' """
 
-""" EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = environ.get("EMAIL_HOST_USER", default="indianpong@gmail.com")
 EMAIL_HOST_PASSWORD = environ.get("EMAIL_HOST_PASSWORD", default="hxog cqpq jltp xjhi")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False """
+EMAIL_USE_SSL = False
 
 """ import certifi
 environ['SSL_CERT_FILE'] = certifi.where() """

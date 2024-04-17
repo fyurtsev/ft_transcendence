@@ -5,13 +5,18 @@
 {% block stylesheet %}<link rel="stylesheet" href="{% static "css/tournament-room.css" %}">{% endblock stylesheet %}
 
 {% block app %}
-<div class="container-top">
+<div class="container-top" data-sucess="{{sucess}}" data-error="{{error}}">
     <div class="card">
+        <a class="refresh-button" onclick="swapApp('/tournament-room/{{tournament.id}}')">
+        <div class="right-refresh">
+            <i class="bi bi-arrow-clockwise"></i>
+        </div></a>
         <div class="indian-logo">
             <img class="logo-indian" src="{% static "assets/logo-dark.png" %}">
         </div>
         <div class="pong-game-text">
             <h3 class="pong-game-text" style="text-align: center; color:white">{{context.tournamentroomRoomText}} #{{tournament.id}} - Ping Pong {{context.tournamentroomPageTittle}} {{tournament.name}}</h3>
+            <p class="tournament-description">{% if tournament.game_mode == "vanilla" %} <i class="bi bi-rocket-fill"></i> {{context.localGameChooseModeText1}} {% else %} <i class="bi bi-rocket-takeoff-fill"></i> {{context.localGameChooseModeText2}} {% endif %}</p>
         </div>
         <div class="game-room-buttons">
             {% if tournament.status == "open" %}
@@ -19,21 +24,21 @@
                     <form method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="leave_tournament" value="true">
-                        <button class="leave-button" type="submit"><i class="bi bi-x-circle-fill"></i>{{context.tournamentroomLeaveButtonText}}</button>
+                        <button class="leave-button" onclick="leaveTournament(`{{tournament.id}}`)" type="button"><i class="bi bi-x-circle-fill"></i>{{context.tournamentroomLeaveButtonText}}</button>
                     </form>
                 {% endif %}
                 {% if not is_participants %}
                     <form method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="join_tournament" value="true">
-                        <button class="leave-button" type="submit"><i class="bi bi-plus-circle-fill"></i>{{context.tournamentroomJoinButtonText}}</button>
+                        <button class="leave-button" onclick="joinTournament(`{{tournament.id}}`)" type="button"><i class="bi bi-plus-circle-fill"></i>{{context.tournamentroomJoinButtonText}}</button>
                     </form>
                 {% endif %}
                 {% if tournament.creator == user %}
                     <form method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="start_tournament" value="true">
-                        <button class="leave-button" type="submit"><i class="bi bi-flag-fill"></i>{{context.tournamentroomStartButtonText}}</button>
+                        <button class="leave-button" onclick="startTournament(`{{tournament.id}}`)" type="button"><i class="bi bi-flag-fill"></i>{{context.tournamentroomStartButtonText}}</button>
                     </form>
                 {% endif %}
             {% endif %}
@@ -44,30 +49,34 @@
         </div>
         <!-- Show winner avatar name and redirect to profile-->
         {% if tournament.winner %}
+            <h3 class="winner-guy-text">{{context.tournamentOverWinnerGuyText}}</h3>
             <div class="winner-container">
                 <div class="winner-avatar">
-                    <img src="{{ tournament.winner.avatar.url }}" alt="Avatar" class="game-room-avatar">
+                    <img src="{{ tournament.winner.avatar.url }}" alt="Avatar" class="game-room-avatar-winner">
                 </div>
                 <div class="winner-info">
-                    <p class="truncate-pseudo" title="{{ tournament.winner.username }}">{{ tournament.winner.username }}</p>
+                    <p class="truncate-pseudo" style="color: greenyellow !important; font-weight:bold !important;" title="{{ tournament.winner.username }}"><img src="{% static "assets/rankings/crown.svg" %}" alt="Crown" class="crown-icon"> {{ tournament.winner.username }}</p>
                 </div>
             </div>
         {% endif %}
         <section id="game-room-section">
             <div class="player-wrapper">
+                {% if tournament.winner %}
+                    <h3 class="losers-winner-text">{{context.tournamentOverLosersText}}</h3>
+                {% endif %}
                 {% for participant in tournament.participants.all %}   
-                        {% if participant.username == tournament.creator.username %}
-                            <div class="place">
-                                <div class="place-container">
-                                    <div class="avatar-container-creator">
-                                        <img src="{{ participant.avatar.url }}" alt="Avatar" class="game-room-avatar">
+                        {% if participant.username == tournament.creator.username and tournament.winner.username != tournament.creator.username %}
+                                <div class="place">
+                                    <div class="place-container">
+                                        <div class="avatar-container-creator">
+                                            <img src="{{ participant.avatar.url }}" alt="Avatar" class="game-room-avatar">
+                                        </div>
+                                        <div class="clash-info player-info">
+                                            <p class="truncate-pseudo-creator" title="{{ participant.username }}">{{ participant.username }} (L)</p>
+                                        </div>
                                     </div>
-                                    <div class="clash-info player-info">
-                                        <p class="truncate-pseudo-creator" title="{{ participant.username }}">{{ participant.username }} (L)</p>
-                                    </div>
-                                </div>
-                            </div>
-                        {% else %}
+                                </div>                                
+                        {% elif tournament.winner.username != participant.username %}
                             <div class="place">
                                 <div class="place-container">
                                     <div class="avatar-container">
@@ -107,13 +116,37 @@
                                     <span class="image">{{ tournament.first_round_matches.first.player1.avatar.url}}</span>
                                     <span class="seed">1</span>
                                     <span class="name">{{ tournament.first_round_matches.first.player1.username }}</span>
-                                    <span class="score">{{ tournament.first_round_matches.first.player1_score}}</span>
+                                    {% if request.user.username == tournament.first_round_matches.first.player1.username %}
+                                        {% if first_game_id and not tournament.first_round_matches.first.winner %}
+                                            <a href="{% url 'remote_game' game_type='tournament' game_id=first_game_id %}" class="match-link-a">
+                                                <span class="match-link"><i class="bi bi-box-arrow-up-right"></i></span>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if tournament.first_round_matches.first.player1.username == tournament.first_round_matches.first.winner.username %}
+                                        <span class="score">{{ tournament.first_round_matches.first.winner_score}}</span>
+                                    {% else %}
+                                        <span class="score">{{ tournament.first_round_matches.first.loser_score}}</span>
+                                    {% endif %}
+                                    
                                 </div>
                                 <div class="match-bottom team">
                                     <span class="image">{{ tournament.first_round_matches.first.player2.avatar.url}}</span>
                                     <span class="seed">2</span>
                                     <span class="name">{{ tournament.first_round_matches.first.player2.username }}</span>
-                                    <span class="score">{{ tournament.first_round_matches.first.player2_score}}</span>
+                                    {% if request.user.username == tournament.first_round_matches.first.player2.username %}
+                                        {% if first_game_id and not tournament.first_round_matches.first.winner %}
+                                            <a href="{% url 'remote_game' game_type='tournament' game_id=first_game_id %}" class="match-link-a">
+                                                <span class="match-link"><i class="bi bi-box-arrow-up-right"></i></span>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if tournament.first_round_matches.first.player2.username == tournament.first_round_matches.first.winner.username %}
+                                        <span class="score">{{ tournament.first_round_matches.first.winner_score}}</span>
+                                    {% else %}
+                                        <span class="score">{{ tournament.first_round_matches.first.loser_score}}</span>
+                                    {% endif %}
+                                    
                                 </div>
                                 <div class="match-lines">
                                     <div class="line one"></div>
@@ -128,13 +161,37 @@
                                     <span class="image">{{ tournament.first_round_matches.last.player1.avatar.url}}</span>
                                     <span class="seed">3</span>
                                     <span class="name">{{ tournament.first_round_matches.last.player1.username }}</span>
-                                    <span class="score">{{ tournament.first_round_matches.last.player1_score}}</span>
+                                    {% if request.user.username == tournament.first_round_matches.last.player1.username %}
+                                        {% if last_game_id and not tournament.first_round_matches.last.winner %}
+                                            <a href="{% url 'remote_game' game_type='tournament' game_id=last_game_id %}" class="match-link-a">
+                                                <span class="match-link"><i class="bi bi-box-arrow-up-right"></i></span>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if tournament.first_round_matches.last.player1.username == tournament.first_round_matches.last.winner.username %}
+                                        <span class="score">{{ tournament.first_round_matches.last.winner_score}}</span>
+                                    {% else %}
+                                        <span class="score">{{ tournament.first_round_matches.last.loser_score}}</span>
+                                    {% endif %}
+                                    
                                 </div>
                                 <div class="match-bottom team">
                                     <span class="image">{{ tournament.first_round_matches.last.player2.avatar.url}}</span>
                                     <span class="seed">4</span>
                                     <span class="name">{{ tournament.first_round_matches.last.player2.username }}</span>
-                                    <span class="score">{{ tournament.first_round_matches.last.player2_score}}</span>
+                                    {% if request.user.username == tournament.first_round_matches.last.player2.username %}
+                                    {% if last_game_id and not tournament.first_round_matches.last.winner %}
+                                        <a href="{% url 'remote_game' game_type='tournament' game_id=last_game_id %}" class="match-link-a">
+                                            <span class="match-link"><i class="bi bi-box-arrow-up-right"></i></span>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                                    {% if tournament.first_round_matches.last.player2.username == tournament.first_round_matches.last.winner.username %}
+                                        <span class="score">{{ tournament.first_round_matches.last.winner_score}}</span>
+                                    {% else %}
+                                        <span class="score">{{ tournament.first_round_matches.last.loser_score}}</span>
+                                    {% endif %}
+                                   
                                 </div>
                                 <div class="match-lines">
                                     <div class="line one"></div>
@@ -151,20 +208,38 @@
                                     <span class="image">{{ tournament.final_round_matches.first.player1.avatar.url}}</span>
                                     <span class="seed">5</span>
                                     <span class="name">{{ tournament.final_round_matches.first.player1.username }}</span>
-                                    <span class="score">{{ tournament.final_round_matches.first.player1_score }}</span>
+                                    {% if request.user.username == tournament.final_round_matches.first.player1.username %}
+                                        {% if final_game_id and not tournament.final_round_matches.first.winner %}
+                                            <a href="{% url 'remote_game' game_type='tournament' game_id=final_game_id %}" class="match-link-a">
+                                                <span class="match-link"><i class="bi bi-box-arrow-up-right"></i></span>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if tournament.final_round_matches.first.player1.username == tournament.final_round_matches.first.winner.username %}
+                                        <span class="score">{{ tournament.final_round_matches.first.winner_score}}</span>
+                                    {% else %}
+                                        <span class="score">{{ tournament.final_round_matches.first.loser_score}}</span>
+                                    {% endif %}
+                                    
                                 </div>
+
                                 <div class="match-bottom team">
                                     <span class="image">{{ tournament.final_round_matches.first.player2.avatar.url}}</span>
                                     <span class="seed">6</span>
                                     <span class="name">{{ tournament.final_round_matches.first.player2.username }}</span>
-                                    <span class="score">{{ tournament.final_round_matches.first.player2_score }}</span>
-                                </div>
-                                <div class="match-lines">
-                                    <div class="line one"></div>
-                                    <div class="line two"></div>
-                                </div>
-                                <div class="match-lines alt">
-                                    <div class="line one"></div>
+                                    {% if request.user.username == tournament.final_round_matches.first.player2.username %}
+                                        {% if final_game_id and not tournament.final_round_matches.first.winner %}
+                                            <a href="{% url 'remote_game' game_type='tournament' game_id=final_game_id %}" class="match-link-a">
+                                                <span class="match-link"><i class="bi bi-box-arrow-up-right"></i></span>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if tournament.final_round_matches.first.player2.username == tournament.final_round_matches.first.winner.username %}
+                                        <span class="score">{{ tournament.final_round_matches.first.winner_score}}</span>
+                                    {% else %}
+                                        <span class="score">{{ tournament.final_round_matches.first.loser_score}}</span>
+                                    {% endif %}
+                                    
                                 </div>
                             </div>
                         </div>
@@ -173,32 +248,20 @@
             </div>
         </section>
     </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-6" style="margin-right: 20px; margin-bottom: 20px">
+        <div class="toast text-bg-danger" id="liveToast" role="alert">
+            <div class="toast-body">
+                <div class="d-flex gap-4">
+                    <span class="i-class"><i class="bi bi-bug-fill"></i></span>
+                    <div class="d-flex flex-grow-1 align-items-center">
+                        <span class="fw-semibold">NULL</span>
+                        <span class="toast-close" data-bs-dismiss="toast"><i class="bi bi-x-circle-fill"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
 </div>
 
-<script>
-    function displaySectionGame(sectionId) {
-    var sections = ["game-bracket-section", "game-room-section"];
-    var buttons = ["checkbracket", "gameroombracket"];
 
-    var button = document.getElementById(buttons[1]);
-    var button2 = document.getElementById(buttons[0]);
-    for (var i = 0; i < sections.length; i++) {
-        var section = document.getElementById(sections[i]);
-        if (sections[i] === sectionId) {
-            section.style.display = 'block';
-            if (sectionId === "game-bracket-section") {
-                button.style.display = 'inline';
-                button2.style.display = 'none';
-            }
-            else {
-                button.style.display = 'none';
-                button2.style.display = 'inline';
-            }
-        } else {
-            section.style.display = 'none';
-        }
-    }
-}
-
-</script>
 {% endblock %}
